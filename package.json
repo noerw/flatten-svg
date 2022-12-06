@@ -5,7 +5,8 @@
   "main": "dist/index.js",
   "scripts": {
     "test": "jest",
-    "prepare": "tsc --declaration"
+    "prepare": "tsc --declaration",
+    "watch": "tsc --declaration --watch"
   },
   "author": "Jeremy Apthorp <nornagon@nornagon.net>",
   "keywords": [
