@@ -1,4 +1,5 @@
 import {getPathData} from './path-data-polyfill';
+import {SVGPresentationAttributes} from './svg-spec';
 
 type Curve = [number, number, number, number, number, number, number, number]
 function isFlatEnough([x0, y0, x1, y1, x2, y2, x3, y3]: Curve, flatness: number) {
@@ -81,6 +82,7 @@ function* walkSvgShapes(svgEl: SVGElement): IterableIterator<SVGElement> {
 
 export interface Options {
   maxError: number;
+  extractAttributes: string[];
 }
 
 export type Point = [number, number] & {x: number, y: number}
@@ -88,30 +90,25 @@ export type Point = [number, number] & {x: number, y: number}
 export interface Line {
   points: Point[];
   groupId?: string;
-}
-
-function getStroke(shape: SVGElement): string | undefined {
-  if (!shape) return undefined
-  const explicitStroke = shape.getAttribute('stroke') || shape.style.stroke
-  if (explicitStroke) {
-    return explicitStroke
-  }
-  if (shape === shape.ownerSVGElement || !shape.ownerSVGElement) return undefined
-  if (shape.parentNode) {
-    return getStroke(shape.parentNode as SVGElement)
-  }
-  return undefined
+  extractedAttributes: { [customProp: string]: string | undefined };
 }
 
 function getGroupId(shape: SVGElement): string | undefined {
-  if (!shape) return undefined
-  if (shape.id && shape.nodeName.toLowerCase() === 'g') {
-    return shape.id
+  return  getInheritedAttribute(shape, 'id', false, 'g')
+}
+
+function getInheritedAttribute(shape: SVGElement, name: string, searchStyle: boolean = false, elementFilter: string = ''): string | undefined {
+  if (!shape) return
+  if (!elementFilter || shape.nodeName.toLocaleLowerCase() === elementFilter) {
+    if (shape.hasAttribute(name))
+      return shape.getAttribute(name) as string
+    if (searchStyle && shape.style[name as any])
+      return shape.style[name as any]
   }
-  if (shape.parentNode) {
-    return getGroupId(shape.parentNode as SVGElement)
-  }
-  return undefined
+    
+  if (shape.ownerSVGElement && shape !== shape.ownerSVGElement && shape.parentNode)
+    return getInheritedAttribute(shape.parentNode as SVGElement, name, searchStyle, elementFilter)
+  return
 }
 
 function point(x: number, y: number): Point {
@@ -134,6 +131,13 @@ export function flattenSVG(svg: SVGElement, options: Partial<Options> = {}): Lin
   const {maxError = 0.1} = options;
   const svgPoint = (svg as any).createSVGPoint()
   const paths: Line[] = []
+
+  const isStyleProperty = new Map<string,boolean>()
+  if (options.extractAttributes) {
+    for (const prop of options.extractAttributes)
+      isStyleProperty.set(prop, SVGPresentationAttributes.includes(prop))
+  }
+  
   for (const shape of walkSvgShapes(svg)) {
     const ctm = (shape as SVGGraphicsElement).getCTM()
     const xf = ctm == null
@@ -151,11 +155,14 @@ export function flattenSVG(svg: SVGElement, options: Partial<Options> = {}): Lin
       if (cmd.type === 'M') {
         cur = xf(cmd.values)
         closePoint = cur
-        paths.push({
+        const result: Line = {
           points: [cur],
-          stroke: getStroke(shape),
           groupId: getGroupId(shape),
-        });
+          extractedAttributes: {},
+        }
+        for (const [prop, isStyle] of isStyleProperty.entries())
+          result.extractedAttributes[prop] = getInheritedAttribute(shape, prop, isStyle)
+        paths.push(result)
       } else if (cmd.type === 'L') {
         cur = xf(cmd.values)
         paths[paths.length-1].points.push(cur)

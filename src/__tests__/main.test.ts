@@ -46,7 +46,7 @@ test('simple path with stroke', () => {
     <path d="M0 0L10 10" stroke="red"/>
   `))
   expect(x).toEqual([
-    {points: pts([[0,0], [10,10]]), stroke: "red", groupId: null}
+    {points: pts([[0,0], [10,10]]), groupId: null}
   ])
 })
 
@@ -56,8 +56,8 @@ test('multiple paths', () => {
     <path d="M10 10L20 20" />
   `))
   expect(x).toEqual([
-    {points: pts([[0,0], [10,10]]), stroke: null, groupId: null},
-    {points: pts([[10,10], [20,20]]), stroke: null, groupId: null}
+    {points: pts([[0,0], [10,10]]), groupId: null},
+    {points: pts([[10,10], [20,20]]), groupId: null}
   ])
 })
 
@@ -66,8 +66,8 @@ test('paths with multiple parts', () => {
     <path d="M0 0L10 10M10 10L20 20" />
   `))
   expect(x).toEqual([
-    {points: pts([[0,0], [10,10]]), stroke: null, groupId: null},
-    {points: pts([[10,10], [20,20]]), stroke: null, groupId: null}
+    {points: pts([[0,0], [10,10]]), groupId: null},
+    {points: pts([[10,10], [20,20]]), groupId: null}
   ])
 })
 
@@ -76,7 +76,7 @@ test('transformed simple path', () => {
     <path d="M0 0L10 10" transform="translate(10 10)" />
   `))
   expect(x).toEqual([
-    {points: pts([[10,10], [20,20]]), stroke: null, groupId: null}
+    {points: pts([[10,10], [20,20]]), groupId: null}
   ])
 })
 
@@ -87,7 +87,7 @@ test('transformed group with simple path', () => {
     </g>
   `))
   expect(x).toEqual([
-    {points: pts([[10,10], [20,20]]), stroke: null, groupId: null}
+    {points: pts([[10,10], [20,20]]), groupId: null}
   ])
 })
 
@@ -117,30 +117,30 @@ test('ignores clipPaths', () => {
   expect(x[0].points).toEqual(pts([[0, 0], [10, 10]]))
 })
 
-test('gets stroke from style', () => {
-  const x = flattenSVG(parseSvg(`
-    <path d="M0 0L10 10" style="stroke: green" />
-  `))
-  expect(x[0].stroke).toEqual('green')
-})
+// test('gets stroke from style', () => {
+//   const x = flattenSVG(parseSvg(`
+//     <path d="M0 0L10 10" style="stroke: green" />
+//   `))
+//   expect(x[0].stroke).toEqual('green')
+// })
 
-test('gets stroke from parent style', () => {
-  const x = flattenSVG(parseSvg(`
-    <g style="stroke: green">
-      <path d="M0 0L10 10" />
-    </g>
-  `))
-  expect(x[0].stroke).toEqual('green')
-})
+// test('gets stroke from parent style', () => {
+//   const x = flattenSVG(parseSvg(`
+//     <g style="stroke: green">
+//       <path d="M0 0L10 10" />
+//     </g>
+//   `))
+//   expect(x[0].stroke).toEqual('green')
+// })
 
-test('gets stroke from parent attr', () => {
-  const x = flattenSVG(parseSvg(`
-    <g stroke="green">
-      <path d="M0 0L10 10" />
-    </g>
-  `))
-  expect(x[0].stroke).toEqual('green')
-})
+// test('gets stroke from parent attr', () => {
+//   const x = flattenSVG(parseSvg(`
+//     <g stroke="green">
+//       <path d="M0 0L10 10" />
+//     </g>
+//   `))
+//   expect(x[0].stroke).toEqual('green')
+// })
 
 test('gets group id', () => {
   const x = flattenSVG(parseSvg(`
