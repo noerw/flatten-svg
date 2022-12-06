@@ -79,15 +79,14 @@ function* walkSvgShapes(svgEl: SVGElement): IterableIterator<SVGElement> {
   }
 }
 
-interface Options {
+export interface Options {
   maxError: number;
 }
 
-type Point = [number, number] & {x: number, y: number}
+export type Point = [number, number] & {x: number, y: number}
 
-interface Line {
+export interface Line {
   points: Point[];
-  stroke?: string;
   groupId?: string;
 }
 
